@@ -84,27 +84,23 @@ class TweetReader():
             self.texts.append(context)
 
    def word_counter(self):
+      counter = 0
       tagger = Mecab.Tagger('-Ochasen')
-      # parse texts lines and split them by new line [str, str, str, ......]
-      tagged_list = [ tagger.parse(text.replace(' ','')).split('\n') for text in self.texts if type(text) != type(None)]
-      # split each text by tab
-      tagged_list = [elem for elem in [outer.pop(0) if x == 'EOS' or x == '' else x.split('\t') for outer in tagged_list for x in outer]]
-      # This method consume too much memory up to here!!!!!!!!
-      noun_list, adj_list = [], []
-      for elem in tagged_list:
-         try:
-            if elem[3][0:2] == '名詞':
-               self.noun_count[elem[0]] = self.noun_count.get(elem[0], 0) + 1
-            counter += 1
-            """elif elem[3][0:3] == '形容':
-               adj_list = elem[0]
-               self.adj_count[elem[0]] = self.adj_count.get(elem[0], 0) + 1"""
-         except(IndexError):
-            continue
+      for text in self.texts:
+         counter += 1
+         if (counter % 100000) == 0:
+            print(counter)
+         if type(text) != type(None):
+            for elem in tagger.parse(text.replace(' ','')).split('\n'):
+               elem = elem.split('\t')
+               try:
+                  if elem[3][0:2] == '名詞':
+                     self.noun_count[elem[0]] = self.noun_count.get(elem[0], 0) + 1
+               except(IndexError):
+                  continue
       print(self.noun_count)
 
 if __name__=='__main__':
    reader = TweetReader()
    reader.create_lists(sys.argv[1])
-   print('hello')
    reader.word_counter()
