@@ -5,4 +5,4 @@ reader.py: データセットからデータを読み込むモジュール
 
 ##メソッド
 reader.py:  
-*create_list(filename): 第一引数に処理したいファイル。
+1. create_list(filename): 第一引数に処理したいファイル。
