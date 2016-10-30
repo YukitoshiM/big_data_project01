@@ -1,6 +1,7 @@
 # This program reads crowled Tweeter data
 
 import sys
+import MeCab as Mecab
 
 # class for reading Tweeter data for any given file 
 class TweetReader():
@@ -12,6 +13,7 @@ class TweetReader():
       # reps:     contains for whom the tweet was replied 
       # texts:    contains actual tweet message
       self.ids, self.dates, self.contexts, self.unk_nums, self.rt_flags, self.reps, self.texts = [], [], [], [], [], [], []
+      self.noun_count, self.adj_count = {}, {}
 
    def create_lists(self, filename):
       # reads files and save lines in to a list
@@ -81,6 +83,28 @@ class TweetReader():
             self.reps.append(None)
             self.texts.append(context)
 
+   def word_counter(self):
+      tagger = Mecab.Tagger('-Ochasen')
+      # parse texts lines and split them by new line [str, str, str, ......]
+      tagged_list = [ tagger.parse(text.replace(' ','')).split('\n') for text in self.texts if type(text) != type(None)]
+      # split each text by tab
+      tagged_list = [elem for elem in [outer.pop(0) if x == 'EOS' or x == '' else x.split('\t') for outer in tagged_list for x in outer]]
+      # This method consume too much memory up to here!!!!!!!!
+      noun_list, adj_list = [], []
+      for elem in tagged_list:
+         try:
+            if elem[3][0:2] == '名詞':
+               self.noun_count[elem[0]] = self.noun_count.get(elem[0], 0) + 1
+            counter += 1
+            """elif elem[3][0:3] == '形容':
+               adj_list = elem[0]
+               self.adj_count[elem[0]] = self.adj_count.get(elem[0], 0) + 1"""
+         except(IndexError):
+            continue
+      print(self.noun_count)
+
 if __name__=='__main__':
    reader = TweetReader()
    reader.create_lists(sys.argv[1])
+   print('hello')
+   reader.word_counter()
