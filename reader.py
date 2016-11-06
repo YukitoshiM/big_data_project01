@@ -1,4 +1,7 @@
 # This program reads crowled Tweeter data
+import matplotlib
+matplotlib.use('AGG')
+import matplotlib.pyplot as plt
 import re
 import sys
 import MeCab as Mecab
@@ -132,45 +135,32 @@ class TweetReader():
          for k,v in sorted(self.noun_count.items(), key=lambda x:x[1])[::-1]:
             f.write(k+'\t'+str(v) + '\n')
 
-
-   def getTF(self, word, text):
-      numOfWords = 0
-      for elem in self.tagger.parse(text.replace(' ','')).split('\n'):
-         elem = elem.split('\t')
-         if elem[0] == word:
-            numOfWords += 1
-      return numOfWords / total_words
-
-   def getDF(self, word):
-      numOfText = 0
-      word_flag = False
-      for counter, text in enumerate(self.texts):
-         counter += 1
-         if (counter % 100000) == 0:
-            print(counter)
-         if type(text) != type(None):
-            for elem in self.tagger.parse(text.replace(' ','')).split('\n'):
-               elem = elem.split('\t')
-               if elem[0] == word:
-                  word_flag = True
-         if word_flag:
-            numOfText += 1
-         word_flag = False
-      return numOfText
-
-   def getIDF(self, word):
-      df = self.getDF(word)
-      n = len(self.contexts)
-      return math.log2(n/df)
-
-   def getTFIDF(self, word, text):
-      tf = self.getTF(word, text)
-      idf = self.getIDF(word)
-      return tf*idf
+   def histgram(self, outfile):
+      hist = [0]*24
+      init_time = 4
+      last_i = 0
+      for i, date in enumerate(self.dates):
+         if date:
+            time = int(date.split(" ")[1][0:2])
+            if time != init_time:
+               hist[init_time] = i - last_i + 1
+               last_i = i
+               if init_time == 23:
+                  init_time = 0
+               else:
+                  init_time += 1
+      x_label = [ str(i) for i in range(24)]
+      x_label = x_label[4:] + x_label[0:4]
+      hist[init_time] = i - last_i + 1
+      hist = hist[4:] + hist[0:4]
+      plt.bar(x_label, hist)
+      plt.title(outfile)
+      plt.savefig('data/2_hist/'+outfile)
 
 if __name__=='__main__':
    reader = TweetReader()
    reader.read_lines(sys.argv[1])
    reader.getContexts()
    reader.noun_counter()
-   reader.noun_ranker(sys.argv[2])
+   reader.getDates()
+   reader.histgram(sys.argv[2])
