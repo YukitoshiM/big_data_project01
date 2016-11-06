@@ -127,6 +127,12 @@ class TweetReader():
                except(IndexError):
                   continue
 
+   def noun_ranker(self, filename):
+      with open(filename, 'w') as f:
+         for k,v in sorted(self.noun_count.items(), key=lambda x:x[1])[::-1]:
+            f.write(k+'\t'+str(v) + '\n')
+
+
    def getTF(self, word, text):
       numOfWords = 0
       for elem in self.tagger.parse(text.replace(' ','')).split('\n'):
@@ -167,4 +173,4 @@ if __name__=='__main__':
    reader.read_lines(sys.argv[1])
    reader.getContexts()
    reader.noun_counter()
-   print(reader.noun_count)
+   reader.noun_ranker(sys.argv[2])
