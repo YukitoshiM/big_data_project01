@@ -12,7 +12,7 @@ import math
 class TweetReader():
    def __init__(self):
       self.tagger = Mecab.Tagger('-Ochasen')
-      self.alnum_Reg = re.compile(r'^[a-zA-Z0-9_]+$')
+      self.alnum_Reg = re.compile(r'^[a-zA-Z0-9_(:;,./?*+&%#!<>|\u3000)~=]+$')
       # These list prepared for data in the Tweeter, 
       # First 4 variables prepared for a line which is devided by tab space
       # Last 3 are for contexts that is devided by space
@@ -21,8 +21,9 @@ class TweetReader():
       # texts:    contains actual tweet message
       self.ids, self.dates, self.contexts, self.unk_nums, self.rt_flags = [], [], [], [], []
       self.reps, self.texts, self.lines, self.morpho= [], [], [], []
-      self.noun_count, self.adj_count, self.verb_count = defaultdict(int), defaultdic(int), defaultdict(int)
-      self.noun_total, self.adj_total, self.verb_total = 0, 0, 0
+      self.noun_count, self.adj_count, self.verb_count = defaultdict(int), defaultdict(int), defaultdict(int)
+      self.word_count = defaultdict(int)
+      self.total_noun, self.total_adj, self.total_verb = 0, 0, 0
       self.total_words = 0
 
    # This method read lines in the input file and store it into class variable called self.lines
@@ -83,7 +84,7 @@ class TweetReader():
             # so this will be ignored! 
             try:
                self.reps.append(context[1])
-               self.texts.append(''.join(context[2:]))
+               self.texts.append(self.emoji_eliminator(''.join(context[2:])))
             except:
                self.rt_flags.append(0)
                self.reps.append(None)
@@ -93,11 +94,21 @@ class TweetReader():
             context = context.split()
             self.rt_flags.append(0)
             self.reps.append(context[0])
-            self.texts.append(''.join(context[1:]))
+            self.texts.append(self.emoji_eliminator(''.join(context[1:])))
          else:
             self.rt_flags.append(0)
             self.reps.append(None)
-            self.texts.append(context)
+            self.texts.append(self.emoji_eliminator(context))
+
+   def emoji_eliminator(self, text):
+      delList = []
+      for i, c in enumerate(text):
+         if c.encode('utf-8')[0] == 226 or c.encode('utf-8')[0] == 240 or self.isalnum_(c):
+            delList.append(i)
+      text = list(text)
+      for i in reversed(delList):
+         text.pop(i)
+      return(''.join(text))
 
    def getUnkNums(self):
       for line in self.lines:
@@ -113,7 +124,23 @@ class TweetReader():
 
    def isalnum_(self, s):
        return self.alnum_Reg.match(s) is not None
-   
+
+
+   def word_counter(self):
+      for counter, text in enumerate(self.texts):
+         counter += 1
+         if (counter % 100000) == 0:
+            print(counter)
+         if type(text) != type(None):
+            for elem in self.tagger.parse(text.replace(' ','')).split('\n'):
+               elem = elem.split('\t')
+               try:
+                  #if not (self.isalnum_(elem[0])):
+                  self.word_count[elem[0]] = self.word_count.get(elem[0], 0) + 1
+                  self.total_words += 1
+               except(IndexError):
+                  continue
+
    # This method counts num of each noun in self.texts and store into self.noun_count
    # e.g. noun_count = { noun1:4, noun2:5, noun3:10, .....}
    def noun_counter(self):
@@ -144,13 +171,13 @@ class TweetReader():
                try:
                   if elem[3][0:3] == '形容詞':
                      if not (self.isalnum_(elem[0])):
-                        self.adj_count[elem[0]] = self.noun_count.get(elem[0], 0) + 1
+                        self.adj_count[elem[0]] = self.adj_count.get(elem[0], 0) + 1
                         self.total_adj += 1
                except(IndexError):
                   continue
    
    
-   def adj_counter(self):
+   def verb_counter(self):
       for counter, text in enumerate(self.texts):
          counter += 1
          if (counter % 100000) == 0:
@@ -161,30 +188,14 @@ class TweetReader():
                try:
                   if elem[3][0:2] == '動詞':
                      if not (self.isalnum_(elem[0])):
-                        self.verb_count[elem[0]] = self.noun_count.get(elem[0], 0) + 1
+                        self.verb_count[elem[0]] = self.verb_count.get(elem[0], 0) + 1
                         self.total_verb += 1
                except(IndexError):
                   continue
 
-   def noun_ranker(self, filename):
+   def word_ranker(self, word, filename):
       with open(filename, 'w') as f:
-         for k,v in sorted(self.noun_count.items(), key=lambda x:x[1])[::-1]:
-            f.write(k+'\t'+str(v) + '\n')
-
-   def histgram(self, outfile):
-      hist = [0]*24
-
-   def noun_ranker(self, filename):
-      with open(filename, 'w') as f:
-         for k,v in sorted(self.noun_count.items(), key=lambda x:x[1])[::-1]:
-            f.write(k+'\t'+str(v) + '\n')
-
-   def histgram(self, outfile):
-      hist = [0]*24
-
-   def noun_ranker(self, filename):
-      with open(filename, 'w') as f:
-         for k,v in sorted(self.noun_count.items(), key=lambda x:x[1])[::-1]:
+         for k,v in sorted(word.items(), key=lambda x:x[1])[::-1]:
             f.write(k+'\t'+str(v) + '\n')
 
    def histgram(self, outfile):
@@ -213,6 +224,6 @@ if __name__=='__main__':
    reader = TweetReader()
    reader.read_lines(sys.argv[1])
    reader.getContexts()
-   reader.noun_counter()
-   reader.getDates()
-   reader.histgram(sys.argv[2])
+   reader.word_counter()
+   print(reader.word_count)
+   reader.word_ranker(reader.word_count, sys.argv[2])
