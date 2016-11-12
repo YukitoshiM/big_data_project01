@@ -25,6 +25,7 @@ class TweetReader():
       self.word_count = defaultdict(int)
       self.total_noun, self.total_adj, self.total_verb = 0, 0, 0
       self.total_words = 0
+      self.corpList = []
 
    # This method read lines in the input file and store it into class variable called self.lines
    def read_lines(self, filename):
@@ -135,8 +136,7 @@ class TweetReader():
             for elem in self.tagger.parse(text.replace(' ','')).split('\n'):
                elem = elem.split('\t')
                try:
-                  #if not (self.isalnum_(elem[0])):
-                  self.word_count[elem[0]] = self.word_count.get(elem[0], 0) + 1
+                  self.word_count[elem[2]] = self.word_count.get(elem[2], 0) + 1
                   self.total_words += 1
                except(IndexError):
                   continue
@@ -220,10 +220,34 @@ class TweetReader():
       plt.title(outfile)
       plt.savefig('data/2_hist/'+outfile)
 
+   def read_corpus(self):
+      with open('corpora/pn_ja.dic', 'r', encoding='cp932') as f:
+         lines = f.readlines()
+      for line in lines:
+         self.corpList.append(line.replace('\n','').split(':'))
+
+   def corpus_check(self):
+      posCount = 0
+      negCount = 0
+      probList = []
+      for c in self.corpList:
+         if c[0] in self.word_count:
+            posCount += 1
+            probList.append(float(c[3]))
+         else:
+            negCount += 1
+      '''plt.bar(range(len(probList)), probList)
+      plt.title('PosNeg')
+      plt.savefig('corpora/posneg_novel.png')
+      print('Num. of exist words: ' + str(posCount))
+      print('Num. of total words: ' + str(posCount + negCount))'''
+
 if __name__=='__main__':
    reader = TweetReader()
    reader.read_lines(sys.argv[1])
    reader.getContexts()
    reader.word_counter()
-   print(reader.word_count)
-   reader.word_ranker(reader.word_count, sys.argv[2])
+   reader.read_corpus()
+   reader.corpus_check()
+   #print(reader.word_count)
+   #reader.word_ranker(reader.word_count, sys.argv[2])
