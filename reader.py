@@ -19,8 +19,10 @@ class TweetReader():
       # rt_flags: contains if the tweet is retweet or not
       # reps:     contains for whom the tweet was replied 
       # texts:    contains actual tweet message
-      self.ids, self.dates, self.contexts, self.unk_nums, self.rt_flags, self.reps, self.texts, self.lines, self.morpho= [], [], [], [], [], [], [], [], []
-      self.noun_count = defaultdict(int)
+      self.ids, self.dates, self.contexts, self.unk_nums, self.rt_flags = [], [], [], [], []
+      self.reps, self.texts, self.lines, self.morpho= [], [], [], []
+      self.noun_count, self.adj_count, self.verb_count = defaultdict(int), defaultdic(int), defaultdict(int)
+      self.noun_total, self.adj_total, self.verb_total = 0, 0, 0
       self.total_words = 0
 
    # This method read lines in the input file and store it into class variable called self.lines
@@ -126,9 +128,59 @@ class TweetReader():
                   if elem[3][0:2] == '名詞':
                      if not (self.isalnum_(elem[0])):
                         self.noun_count[elem[0]] = self.noun_count.get(elem[0], 0) + 1
-                        self.total_words += 1
+                        self.total_noun += 1
                except(IndexError):
                   continue
+
+   
+   def adj_counter(self):
+      for counter, text in enumerate(self.texts):
+         counter += 1
+         if (counter % 100000) == 0:
+            print(counter)
+         if type(text) != type(None):
+            for elem in self.tagger.parse(text.replace(' ','')).split('\n'):
+               elem = elem.split('\t')
+               try:
+                  if elem[3][0:3] == '形容詞':
+                     if not (self.isalnum_(elem[0])):
+                        self.adj_count[elem[0]] = self.noun_count.get(elem[0], 0) + 1
+                        self.total_adj += 1
+               except(IndexError):
+                  continue
+   
+   
+   def adj_counter(self):
+      for counter, text in enumerate(self.texts):
+         counter += 1
+         if (counter % 100000) == 0:
+            print(counter)
+         if type(text) != type(None):
+            for elem in self.tagger.parse(text.replace(' ','')).split('\n'):
+               elem = elem.split('\t')
+               try:
+                  if elem[3][0:2] == '動詞':
+                     if not (self.isalnum_(elem[0])):
+                        self.verb_count[elem[0]] = self.noun_count.get(elem[0], 0) + 1
+                        self.total_verb += 1
+               except(IndexError):
+                  continue
+
+   def noun_ranker(self, filename):
+      with open(filename, 'w') as f:
+         for k,v in sorted(self.noun_count.items(), key=lambda x:x[1])[::-1]:
+            f.write(k+'\t'+str(v) + '\n')
+
+   def histgram(self, outfile):
+      hist = [0]*24
+
+   def noun_ranker(self, filename):
+      with open(filename, 'w') as f:
+         for k,v in sorted(self.noun_count.items(), key=lambda x:x[1])[::-1]:
+            f.write(k+'\t'+str(v) + '\n')
+
+   def histgram(self, outfile):
+      hist = [0]*24
 
    def noun_ranker(self, filename):
       with open(filename, 'w') as f:
