@@ -31,8 +31,10 @@ class TweetReader():
       self.existCount, self.totalCount = 0, 0
       self.dictIDWord, self.dictWordID = {}, {}
       self.dictIDProb, self.dictIDNum, self.dictNumFeat = {}, {}, {}
+      self.dictNumID = {}
       self.features = np.array([])
-      self.clf = kmeans(n_clusters=2, init = 'random', n_init=10, max_iter=30, tol=1e-05, random_state=0) 
+      self.clf = kmeans(n_clusters=3, init = 'random', n_init=10, max_iter=30, tol=1e-05, random_state=0) 
+      self.keyID = []
 
    # This method read lines in the input file and store it into class variable called self.lines
    def read_lines(self, filename):
@@ -249,6 +251,7 @@ class TweetReader():
       for idNum in self.ids:
          if idNum and (idNum not in self.dictIDNum):
             self.dictIDNum.update({idNum:num})
+            self.dictNumID.update({num:idNum})
             array = np.zeros(len(self.dictIDWord))
             self.dictNumFeat.update({num:array})
             num += 1
@@ -268,15 +271,15 @@ class TweetReader():
       featArr = []
       for key, value in self.dictNumFeat.items():
          featArr.append(value)
+         self.keyID.append(key)
       self.features = np.array(featArr)
 
    def kmeans_fit(self, n_dim=3):
-      print('Start leaning!')
       self.clf.fit(self.features)
-      print('Finished learning!')
-      labels = self.clf._labels_
-      for label, feature in zip(labels, self.features):
-         print(label, feature, feature.sum())
+      labels = self.clf.labels_
+      print('Class\tFeature\tSum of Feat.\tTwitter ID')
+      for num, label, feature in zip(self.keyID, labels, self.features):
+         print(label, feature, feature.sum(), self.dictNumID[num])
 
 if __name__=='__main__':
    reader = TweetReader()
