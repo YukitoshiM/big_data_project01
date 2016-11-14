@@ -231,16 +231,16 @@ class TweetReader():
       negCount = 0
       probList = []
       for c in self.corpList:
+         #probList.append(float(c[3]))
          if c[0] in self.word_count:
             posCount += 1
-            probList.append(float(c[3]))
          else:
             negCount += 1
-      '''plt.bar(range(len(probList)), probList)
+      """plt.bar(range(len(probList)), probList)
       plt.title('PosNeg')
-      plt.savefig('corpora/posneg_novel.png')
+      plt.savefig('corpora/posneg.png')"""
       print('Num. of exist words: ' + str(posCount))
-      print('Num. of total words: ' + str(posCount + negCount))'''
+      print('Num. of total words: ' + str(posCount + negCount))
 
 if __name__=='__main__':
    reader = TweetReader()

@@ -21,7 +21,7 @@ def sort_file(inFile, outFile):
             except:
                # Ignore EOS
                continue
-         newTextList.append(new_text)
+         newTextList.append(new_text + '\n')
    with open(outFile, 'w') as f:
       for l in newTextList:
          f.write(l)
