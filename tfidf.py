@@ -28,7 +28,7 @@ def getIDF(self, word):
    n = len(self.contexts)
    return math.log2(n/df)
 
-166    def getTFIDF(self, word, text):
-167       tf = self.getTF(word, text)
-168       idf = self.getIDF(word)
-169       return tf*idf
+def getTFIDF(self, word, text):
+   tf = self.getTF(word, text)
+   idf = self.getIDF(word)
+   return tf*idf

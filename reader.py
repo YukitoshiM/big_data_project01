@@ -7,6 +7,8 @@ import sys
 import MeCab as Mecab
 from collections import defaultdict
 import math
+import numpy as np
+from sklearn.cluster import KMeans as kmeans
 
 # class for reading Tweeter data for any given file 
 class TweetReader():
@@ -26,6 +28,11 @@ class TweetReader():
       self.total_noun, self.total_adj, self.total_verb = 0, 0, 0
       self.total_words = 0
       self.corpList = []
+      self.existCount, self.totalCount = 0, 0
+      self.dictIDWord, self.dictWordID = {}, {}
+      self.dictIDProb, self.dictIDNum, self.dictNumFeat = {}, {}, {}
+      self.features = np.array([])
+      self.clf = kmeans(n_clusters=2, init = 'random', n_init=10, max_iter=30, tol=1e-05, random_state=0) 
 
    # This method read lines in the input file and store it into class variable called self.lines
    def read_lines(self, filename):
@@ -227,27 +234,61 @@ class TweetReader():
          self.corpList.append(line.replace('\n','').split(':'))
 
    def corpus_check(self):
-      posCount = 0
-      negCount = 0
-      probList = []
       for c in self.corpList:
          #probList.append(float(c[3]))
          if c[0] in self.word_count:
-            posCount += 1
-         else:
-            negCount += 1
-      """plt.bar(range(len(probList)), probList)
-      plt.title('PosNeg')
-      plt.savefig('corpora/posneg.png')"""
-      print('Num. of exist words: ' + str(posCount))
-      print('Num. of total words: ' + str(posCount + negCount))
+            self.dictWordID.update({c[0]:self.existCount})
+            self.dictIDWord.update({str(self.existCount):c[0]})
+            self.dictIDProb.update({str(self.existCount):float(c[3])})
+            self.existCount += 1
+         #else:
+         #   totalCount += 1
+
+   def set_feat(self):
+      num = 0
+      for idNum in self.ids:
+         if idNum and (idNum not in self.dictIDNum):
+            self.dictIDNum.update({idNum:num})
+            array = np.zeros(len(self.dictIDWord))
+            self.dictNumFeat.update({num:array})
+            num += 1
+
+   def fill_feat(self):
+      for i, text in enumerate(self.texts):
+         if text and self.ids[i]:
+            for elem in self.tagger.parse(text.replace(' ','')).split('\n'):
+               try:
+                  word = elem.split('\t')[2]
+                  wIDNum = self.dictWordID[word]
+                  uID = self.ids[i]
+                  uIDNum = self.dictIDNum[uID]
+                  self.dictNumFeat[uIDNum][wIDNum] = self.dictIDProb[str(wIDNum)]
+               except(IndexError, KeyError):
+                  continue
+      featArr = []
+      for key, value in self.dictNumFeat.items():
+         featArr.append(value)
+      self.features = np.array(featArr)
+
+   def kmeans_fit(self, n_dim=3):
+      print('Start leaning!')
+      self.clf.fit(self.features)
+      print('Finished learning!')
+      labels = self.clf._labels_
+      for label, feature in zip(labels, self.features):
+         print(label, feature, feature.sum())
 
 if __name__=='__main__':
    reader = TweetReader()
    reader.read_lines(sys.argv[1])
+   reader.getIDs()
    reader.getContexts()
    reader.word_counter()
    reader.read_corpus()
    reader.corpus_check()
+   reader.set_feat()
+   reader.fill_feat()
+   reader.kmeans_fit()
+   #print(reader.dictIDWord)
    #print(reader.word_count)
    #reader.word_ranker(reader.word_count, sys.argv[2])
