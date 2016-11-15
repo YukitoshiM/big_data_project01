@@ -277,9 +277,9 @@ class TweetReader():
    def kmeans_fit(self, n_dim=3):
       self.clf.fit(self.features)
       labels = self.clf.labels_
-      print('Class\tFeature\tSum of Feat.\tTwitter ID')
-      for num, label, feature in zip(self.keyID, labels, self.features):
-         print(label, feature, feature.sum(), self.dictNumID[num])
+      print('Class\tTwitter ID')
+      for num, label in zip(self.keyID, labels):
+         print(label, self.dictNumID[num])
 
 if __name__=='__main__':
    reader = TweetReader()
