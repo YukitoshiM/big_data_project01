@@ -33,7 +33,7 @@ class TweetReader():
       self.dictIDProb, self.dictIDNum, self.dictNumFeat = {}, {}, {}
       self.dictNumID = {}
       self.features = np.array([])
-      self.clf = kmeans(n_clusters=2, init = 'random', n_init=10, max_iter=30, tol=1e-05, random_state=0) 
+      self.clf = kmeans(n_clusters=3, init = 'random', n_init=10, max_iter=30, tol=1e-05, random_state=0) 
       self.keyID = []
 
    # This method read lines in the input file and store it into class variable called self.lines

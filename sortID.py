@@ -7,11 +7,12 @@ def sort_file(inFile, outFile):
    tagger = MeCab.Tagger('-Ochasen')
    read.read_lines(inFile)
    read.getIDs()
+   read.getDates()
    read.getContexts()
    newTextList = []
    for i, text in enumerate(read.texts):
-      if read.ids[i] and text:
-         new_text = read.ids[i] + '\t'
+      if read.dates[i] and text:
+         new_text = read.dates[i] + '\t'
          for tag in tagger.parse(text.replace(' ','')).split('\n'):
             try:
                tag = tag.split('\t')

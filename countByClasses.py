@@ -34,7 +34,7 @@ def acount_by_class(results):
          print('Warning: This Method does not take more than 3 classes, so ad if statement to cover more')
    return class0, class1, class2
 
-def tweet_by_class(classes, n=2):
+def tweet_by_class(classes, n=3):
    list0, list1, list2 = [], [], []
    for ac, text in zip(read.ids, read.texts):
       if ac in classes[0]:
@@ -44,7 +44,7 @@ def tweet_by_class(classes, n=2):
    if n == 3:
       for ac, text in zip(read.ids, read.texts):
          if ac in classes[2]:
-            list0.append(text)
+            list2.append(text)
    return list0, list1, list2
 
 def count_word(List):
